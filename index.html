@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LGCY Door Knock Script</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,800;125,900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --background:40 16% 95%; --foreground:20 5% 13%;
+    --card:0 0% 100%; --primary:187 56% 39%; --secondary:22 89% 57%;
+    --accent:42 16% 90%; --muted-foreground:20 5% 40%; --border:42 16% 85%;
+    --dark:20 5% 12%; --dark-fg:42 16% 87%; --radius:.5rem;
+    --display:"Archivo",system-ui,sans-serif; --sans:"DM Sans",system-ui,sans-serif; --mono:"DM Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;border:0 solid hsl(var(--border))}
+  html,body{background:hsl(var(--background));color:hsl(var(--foreground));font:15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+  button,input{font:inherit;color:inherit;background:none}
+  button{cursor:pointer}
+
+  /* top nav */
+  .appnav{position:sticky;top:0;z-index:10;height:3rem;background:hsl(var(--dark));color:hsl(var(--dark-fg));display:flex;align-items:center;padding:0 16px;gap:12px}
+  .mark{display:flex;align-items:center;gap:10px}
+  .logo{width:26px;height:26px;border-radius:6px;background:hsl(var(--primary));display:grid;place-items:center;font:900 8px/1 var(--display);color:#fff;letter-spacing:0}
+  .brand{font:800 12px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;color:#fff}
+  .brand small{display:block;font:500 10px/1.3 var(--mono);letter-spacing:.08em;color:hsl(var(--dark-fg)/.7);margin-top:2px}
+  .navright{margin-left:auto;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:hsl(var(--dark-fg)/.7)}
+
+  /* subheader stepper */
+  .sub{position:sticky;top:3rem;z-index:9;height:3.5rem;background:hsl(var(--card));border-bottom:1px solid hsl(var(--border));display:flex;align-items:center;justify-content:center;padding:0 12px}
+  .stepper{display:flex;align-items:center;gap:6px;width:100%;max-width:640px}
+  .stepper button{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius);font-weight:500;font-size:13.5px;color:hsl(var(--muted-foreground));white-space:nowrap;flex:0 1 auto;min-width:0}
+  .stepper button:hover{background:hsl(var(--accent)/.6)}
+  .stepper .dot{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:1.5px solid hsl(var(--border));font:500 12px var(--mono);background:#fff}
+  .stepper .lbl{overflow:hidden;text-overflow:ellipsis}
+  .stepper .line{flex:1;height:1px;background:hsl(var(--border));min-width:12px}
+  .stepper button[aria-selected="true"]{color:hsl(var(--foreground))}
+  .stepper button[aria-selected="true"] .dot{background:hsl(var(--primary));border-color:hsl(var(--primary));color:#fff}
+  .stepper button.done .dot{border-color:hsl(var(--primary));color:hsl(var(--primary))}
+
+  main{max-width:720px;margin:0 auto;padding:32px 16px 56px}
+  .eyebrow{font:500 11.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:hsl(var(--muted-foreground))}
+  h1{font:900 clamp(28px,6.4vw,44px)/1.02 var(--display);text-transform:uppercase;letter-spacing:-.01em;margin:8px 0 6px}
+  .lede{color:hsl(var(--muted-foreground));font-size:15.5px;margin-bottom:26px}
+  .step{display:none}
+  .step.active{display:block;animation:in .25s ease-out}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* cards */
+  .card{background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:calc(var(--radius) + 4px);box-shadow:0 1px 2px #0000000d;padding:18px 20px;margin-bottom:12px;display:grid;grid-template-columns:2.75rem minmax(0,1fr);gap:0 14px}
+  .num{width:2.75rem;height:2.75rem;border-radius:var(--radius);background:hsl(var(--accent));display:grid;place-items:center;font:500 13px var(--mono);color:hsl(var(--foreground))}
+  .ttl{font-weight:700;font-size:16px;line-height:1.3;margin:2px 0 4px}
+  .card p{color:hsl(var(--foreground)/.88)}
+  .hl{color:hsl(var(--primary));font-weight:500}
+  em{font-style:italic;color:hsl(var(--muted-foreground))}
+  .blank{display:inline-block;width:64px;border-bottom:1.5px solid hsl(var(--foreground)/.4);transform:translateY(-3px)}
+
+  .chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:14px 0 12px}
+  .chip{font:500 11.5px var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:5px 10px;border-radius:999px;border:1px solid hsl(var(--border));background:hsl(var(--background))}
+  .chip.end{background:hsl(var(--secondary));border-color:hsl(var(--secondary));color:#fff}
+  .arr{color:hsl(var(--muted-foreground));font-size:12px}
+  .note{border-left:3px solid hsl(var(--secondary));background:hsl(var(--secondary)/.08);border-radius:0 var(--radius) var(--radius) 0;padding:10px 14px;font-size:14.5px}
+  .note b{color:hsl(var(--secondary))}
+
+  /* close card */
+  .close{background:hsl(var(--dark));color:#fff;border-radius:calc(var(--radius) + 4px);padding:22px 22px 20px;margin:20px 0 12px}
+  .close .eyebrow{color:hsl(var(--dark-fg)/.65)}
+  .close .big{font:900 clamp(22px,5vw,32px)/1.08 var(--display);text-transform:uppercase;margin:8px 0 16px}
+  .close p{color:hsl(var(--dark-fg))}
+  .lr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{height:2.75rem;border-radius:var(--radius);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 18px;transition:background .15s,color .15s,border-color .15s}
+  .btn-ghost{border:1px solid hsl(var(--dark-fg)/.25);color:#fff}
+  .lr .btn{cursor:default}
+  .btn-primary{background:hsl(var(--primary));color:#fff}
+  .btn-primary:hover{background:hsl(187 56% 34%)}
+  .btn-outline{border:1px solid hsl(var(--border));background:#fff}
+  .btn-outline:hover{background:hsl(var(--accent)/.6)}
+  .pill{display:flex;align-items:center;justify-content:center;height:2.75rem;border-radius:var(--radius);background:hsl(var(--secondary));font-weight:700}
+
+  /* booking inputs */
+  .slots{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:10px;margin-top:14px}
+  .field label{display:block;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:hsl(var(--muted-foreground));margin-bottom:5px}
+  .field input{width:100%;height:2.5rem;border:1px solid hsl(var(--border));border-radius:var(--radius);padding:0 12px;background:#fff;outline:none}
+  .field input:focus{border-color:hsl(var(--primary));box-shadow:0 0 0 3px hsl(var(--primary)/.18)}
+  .slot{height:2.75rem;border:1px dashed hsl(var(--muted-foreground)/.5);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font:500 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:hsl(var(--muted-foreground));background:hsl(var(--background))}
+  .slots{align-items:center}
+  .or{font:500 12px var(--mono);color:hsl(var(--muted-foreground))}
+
+  .mindset{border:1px dashed hsl(var(--muted-foreground)/.45);border-radius:calc(var(--radius) + 4px);padding:16px 20px;margin-top:12px}
+  .mindset .eyebrow{margin-bottom:6px;color:hsl(var(--primary))}
+
+  .pager{display:flex;gap:10px;margin-top:24px}
+  .pager .fwd{margin-left:auto}
+
+  /* lock */
+  #lock{position:fixed;inset:0;z-index:30;background:hsl(var(--background));display:flex;flex-direction:column;min-height:100dvh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+  #lock .center{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+  .lockbox{width:100%;max-width:380px;background:#fff;border:1px solid hsl(var(--border));border-radius:calc(var(--radius) + 6px);box-shadow:0 10px 30px -12px #0000002e;padding:28px 24px}
+  .lockicon{width:44px;height:44px;border-radius:var(--radius);background:hsl(var(--accent));display:grid;place-items:center;margin-bottom:14px}
+  .lockbox h2{font:900 24px/1.05 var(--display);text-transform:uppercase}
+  .lockbox p{color:hsl(var(--muted-foreground));margin:6px 0 18px;font-size:14.5px}
+  .lockbox .btn{width:100%;margin-top:10px}
+  .err{color:hsl(0 74% 42%);font-size:13.5px;min-height:20px;margin-top:8px}
+  .pwrap{position:relative}
+  .pwrap input{padding-right:64px}
+  .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);height:2rem;padding:0 10px;border-radius:6px;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:hsl(var(--muted-foreground))}
+  .eye:hover{background:hsl(var(--accent))}
+  .lockbox .field input{font-size:16px;height:3rem;letter-spacing:.06em}
+  .shake{animation:sh .35s}
+  @keyframes sh{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+  #app{display:none}
+
+  @media (max-width:560px){
+    .stepper .lbl{display:none}
+    .stepper button[aria-selected="true"] .lbl{display:inline}
+    .card{grid-template-columns:2.25rem minmax(0,1fr);padding:16px;gap:0 12px}
+    .num{width:2.25rem;height:2.25rem;font-size:12px}
+    .slots{grid-template-columns:1fr}
+    .or{padding:0;text-align:center}
+    .navright{display:none}
+    #lock .center{align-items:flex-start;padding:12vh 20px 24px}
+    .lockbox{max-width:none;background:transparent;border:0;box-shadow:none;padding:0}
+    .lockicon{width:52px;height:52px;background:#fff;border:1px solid hsl(var(--border));margin-bottom:18px}
+    .lockbox h2{font-size:32px}
+    .lockbox p{font-size:16px;margin:8px 0 24px}
+    .lockbox .btn{height:3.25rem;font-size:16px;margin-top:12px}
+    .lockbox .field input{height:3.25rem;background:#fff}
+  }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="lock">
+  <div class="appnav">
+    <div class="mark"><div class="logo">LGCY</div><div class="brand">Home Services<small>Sales Enablement</small></div></div>
+  </div>
+  <div class="center">
+    <form class="lockbox" id="lockForm" autocomplete="off">
+      <div class="lockicon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      </div>
+      <h2>Reps only</h2>
+      <p>Enter the team password to open the door knock script.</p>
+      <div class="field"><label for="pw">Password</label><div class="pwrap"><input id="pw" type="password" autocomplete="current-password" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go"><button type="button" class="eye" id="eye" aria-label="Show password">Show</button></div></div>
+      <button class="btn btn-primary" type="submit">Unlock</button>
+      <div class="err" id="err"></div>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="appnav">
+    <div class="mark"><div class="logo">LGCY</div><div class="brand">Home Services<small>Door Knock Script</small></div></div>
+    <div class="navright">Free Roof Inspections</div>
+  </div>
+
+  <div class="sub">
+    <div class="stepper" role="tablist">
+      <button role="tab" data-step="1" aria-selected="true"><span class="dot">1</span><span class="lbl">The Pitch</span></button>
+      <span class="line"></span>
+      <button role="tab" data-step="2" aria-selected="false"><span class="dot">2</span><span class="lbl">Problem + Solution</span></button>
+      <span class="line"></span>
+      <button role="tab" data-step="3" aria-selected="false"><span class="dot">3</span><span class="lbl">Book the Attic</span></button>
+    </div>
+  </div>
+
+  <main>
+    <!-- STEP 1 -->
+    <section class="step active" id="step1">
+      <div class="eyebrow">Step 1 of 3</div>
+      <h1>Roof Inspection Pitch</h1>
+      <p class="lede">Get on the roof.</p>
+
+      <div class="card"><div class="num">01</div><div>
+        <div class="ttl">The Hook</div>
+        <p>Hey, how's it going? I'm <span class="blank"></span> with LGCY Home Services. I've got an appointment in about <span class="hl">10–15 minutes</span>, so I'll be quick.</p>
+      </div></div>
+
+      <div class="card"><div class="num">02</div><div>
+        <div class="ttl">The Reason</div>
+        <p>I've been doing roof inspections on a lot of the neighbors' homes. We've had a large increase in inspections with the <span class="hl">El Niño rains</span> coming. The reason I knocked is I noticed <span class="hl">some areas of concern</span> on your roof. <span class="hl">When's the last time you had a professional roof inspection?</span></p>
+      </div></div>
+
+      <div class="card"><div class="num">03</div><div>
+        <div class="ttl">The Offer</div>
+        <p>I have some time before my next appointment, so I can hop up there <span class="hl">for free</span> and let you know what you're working with. <span class="hl">No strings attached.</span> If there's damage, I'll explain possible next steps. My hope is you're good through the winter, and I can tell you you're <span class="hl">A-OK.</span></p>
+      </div></div>
+
+      <div class="close">
+        <div class="eyebrow">04 · The Close</div>
+        <div class="big">Do you want my ladder on the left or the right?</div>
+        <div class="lr">
+          <div class="btn btn-ghost">Left</div>
+          <div class="btn btn-ghost">Right</div>
+        </div>
+      </div>
+
+      <div class="pager"><button class="btn btn-primary fwd" data-go="2">Continue to Step 2 →</button></div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step" id="step2">
+      <div class="eyebrow">Step 2 of 3</div>
+      <h1>Sell the Problem + the Solution</h1>
+      <p class="lede">Educate first, then show them their roof.</p>
+
+      <div class="card"><div class="num">2.1</div><div>
+        <div class="ttl">The Re-Knock</div>
+        <p>Ask: <span class="hl">"Do you want the good news or the bad news?"</span> <em>Drop your tone. Get serious. Show concern in your voice and body language.</em></p>
+      </div></div>
+
+      <div class="card"><div class="num">2.2</div><div>
+        <div class="ttl">The Bad News</div>
+        <p>After they say bad news: the damage is <span class="hl">more extensive than I first thought</span>. The problem is <span class="hl">lack of ventilation</span>, and it breaks the roof down over time.</p>
+      </div></div>
+
+      <div class="card"><div class="num">2.3</div><div>
+        <div class="ttl">The Problem</div>
+        <p>A shingle is felt paper dipped in tar, sprayed with fiberglass, topped with granules. Heat makes it expand and contract again and again, and the <span class="hl">granules fall off</span>.</p>
+        <div class="chain">
+          <span class="chip">Fiberglass exposed</span><span class="arr">→</span>
+          <span class="chip">Holds water</span><span class="arr">→</span>
+          <span class="chip">Soaks felt</span><span class="arr">→</span>
+          <span class="chip">Soaks plywood</span><span class="arr">→</span>
+          <span class="chip end">Leaks</span>
+        </div>
+        <div class="note">This is where you build trust. They believe <b>10%</b> of what they hear and <b>50%</b> of what they see, so show photos of THEIR roof <u>after</u> you explain and educate.</div>
+      </div></div>
+
+      <div class="card"><div class="num">2.4</div><div>
+        <div class="ttl">The Unknown</div>
+        <p>We won't know the full damage, good or bad, until we <span class="hl">inspect the attic</span>. I can't right now — I've got to run to another appointment.</p>
+      </div></div>
+
+      <div class="card"><div class="num">2.5</div><div>
+        <div class="ttl">The Solution</div>
+        <p>If there's attic damage (<span class="hl">I'm 99% sure there will be</span>), your home COULD qualify to be a <span class="hl">marketing home</span>. <em>Explain why their home is a good fit.</em> If upper management approves: <span class="hl">no money out of pocket</span> and a small monthly bill, like a cell phone bill.</p>
+      </div></div>
+
+      <div class="close">
+        <div class="eyebrow">The Goal</div>
+        <p style="margin-top:8px;font-size:16px">The company is super picky. Do every single thing you can, pending the attic inspection, to get them the best deal and qualify them for the marketing program.</p>
+      </div>
+
+      <div class="pager"><button class="btn btn-outline" data-go="1">← Step 1</button><button class="btn btn-primary fwd" data-go="3">Continue to Step 3 →</button></div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step" id="step3">
+      <div class="eyebrow">Step 3 of 3</div>
+      <h1>Book the Attic Inspection</h1>
+      <p class="lede">Lock in a time before you leave the door.</p>
+
+      <div class="card"><div class="num">3.1</div><div>
+        <div class="ttl">The Urgency</div>
+        <p>It's super important we <span class="hl">figure out a time quickly</span> to inspect the attic. Based on what I saw up top, I think your home will be a good fit. But <span class="hl">we only do so many of these</span>.</p>
+      </div></div>
+
+      <div class="card"><div class="num">3.2</div><div>
+        <div class="ttl">The Booking</div>
+        <p>I can come back <span class="blank"></span> or <span class="blank"></span> to do that inspection. Then we can look at what the next steps would be.</p>
+        <div class="slots">
+          <div class="slot">Day / time</div>
+          <span class="or">or</span>
+          <div class="slot">Day / time</div>
+        </div>
+      </div></div>
+
+      <div class="card"><div class="num">3.3</div><div>
+        <div class="ttl">How the Program Works</div>
+        <p>Our company advertises like this: homes in a neighborhood were <span class="hl">built at the same time</span>, so their roofs go out at the same time. The first few marketing homes get a roof at <span class="hl">basically our cost</span>, so we can work the rest of your neighborhood.</p>
+      </div></div>
+
+      <div class="close">
+        <div class="eyebrow">The Close</div>
+        <div class="big">Let's compare schedules and find something that works.</div>
+        <div class="pill">Do you have your schedule handy?</div>
+      </div>
+
+      <div class="mindset">
+        <div class="eyebrow">Rep Mindset</div>
+        <p>They need to feel it's <span class="hl">you and them</span> against upper management, working to get their home approved for a great deal: <span class="hl">no money out of pocket</span> and a small, manageable monthly payment. Stress how <span class="hl">picky the company is</span> and that your job is making sure they get the discounts.</p>
+      </div>
+
+      <div class="pager"><button class="btn btn-outline" data-go="2">← Step 2</button></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  var HASH = "8b2a0f37f02d36992a48dd9906dbd22d79a36d0d57a71b7cc58b0f30b743ad5b";
+  var KEY = "lgcy-script-unlocked";
+
+  function unlock(){
+    document.getElementById('lock').style.display='none';
+    document.getElementById('app').style.display='block';
+    try{ sessionStorage.setItem(KEY,'1'); }catch(e){}
+  }
+  try{ if(sessionStorage.getItem(KEY)==='1'){ unlock(); } }catch(e){}
+
+  async function sha(s){
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+  }
+
+  var eye=document.getElementById('eye');
+  eye.addEventListener('click',function(){
+    var p=document.getElementById('pw'), show=p.type==='password';
+    p.type=show?'text':'password'; eye.textContent=show?'Hide':'Show';
+    eye.setAttribute('aria-label',show?'Hide password':'Show password'); p.focus();
+  });
+  var form=document.getElementById('lockForm'), pw=document.getElementById('pw'), err=document.getElementById('err');
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    var ok=false;
+    try{ ok = (await sha(pw.value.trim().toUpperCase())) === HASH; }catch(x){ ok=false; }
+    if(ok){ unlock(); }
+    else{
+      err.textContent='Wrong password. Try again.';
+      form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake');
+      pw.select();
+    }
+  });
+
+  function go(n){
+    document.querySelectorAll('.step').forEach(function(s){s.classList.toggle('active', s.id==='step'+n)});
+    document.querySelectorAll('.stepper button').forEach(function(b){
+      var k=+b.dataset.step;
+      b.setAttribute('aria-selected', k===n);
+      b.classList.toggle('done', k<n);
+    });
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.querySelectorAll('.stepper button').forEach(function(b){b.addEventListener('click',function(){go(+b.dataset.step)})});
+  document.querySelectorAll('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(+b.dataset.go)})});
+
+})();
+</script>
+</body>
+</html>
